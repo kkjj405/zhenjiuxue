@@ -161,7 +161,10 @@
   function doneCount() {
     if (!run) return 0;
     if (run.mode === 'mo') return Object.keys(run.submitted || {}).length;
-    return (run.qcache || []).filter(function (q) { return q && q.done; }).length;
+    var n = 0;
+    var qc = run.qcache || {};
+    Object.keys(qc).forEach(function (k) { if (qc[k] && qc[k].done) n++; });
+    return n;
   }
 
   /* ---------- 练习首页 ---------- */

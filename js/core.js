@@ -327,7 +327,9 @@
   function practiceDone(rec) {
     if (!rec) return 0;
     if (rec.mode === 'mo') return Object.keys(rec.submitted || {}).length;
-    return (rec.qs || []).filter(function (q) { return q.done; }).length;
+    var n = 0, qs = rec.qs || {};
+    Object.keys(qs).forEach(function (k) { if (qs[k] && qs[k].done) n++; });
+    return n;
   }
 
   window.ZJ = {
