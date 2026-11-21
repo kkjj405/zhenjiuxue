@@ -469,8 +469,15 @@
   }
 
   function bindPanel(main, kind, v) {
-    var panel = document.getElementById('card-panel');
-    if (!panel) return;
+    var host = document.getElementById('card-panel');
+    if (!host) return;
+    /* 关键：把面板 HTML 真正注入占位容器（之前漏了这一步，导致四个按钮点了没反应） */
+    var wrap = document.createElement('div');
+    wrap.innerHTML = panelHTML(kind, v, cardState.panel);
+    var fresh = wrap.firstElementChild;
+    if (!fresh) return;
+    host.parentNode.replaceChild(fresh, host);
+    var panel = fresh;
     var close = function () { cardState.panel = null; UI.render(); };
     panel.querySelectorAll('[data-pc="close"]').forEach(function (b) { b.onclick = close; });
     var sv = panel.querySelector('[data-pc="note-save"]');
