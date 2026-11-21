@@ -106,7 +106,7 @@
     if (kind === 'point') {
       return { location: '定位', anatomy: '解剖', indications: '主治', manipulation: '操作' }[field] || field;
     }
-    return { zhifa: '治法', main: '主穴', aux: '配穴' }[kind] || kind;
+    return { zhifa: '治法', main: '主穴', aux: '配穴' }[field] || field;
   }
   function itemStem(q) {
     if (q.kind === 'point') {
