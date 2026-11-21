@@ -41,7 +41,7 @@
   /* ================= 腧穴目录 ================= */
   function pointRow(p, manage) {
     var hid = Z.isHidden(p.id), flags = [];
-    if (p.star) flags.push('<span class="flag star" title="重点穴">★</span>');
+    if (p.star) flags.push('<span class="flag star" title="教材标注的临床常用穴">★</span>');
     if (hid) flags.push('<span class="flag" title="已隐藏">⊘</span>');
     if (Z.isFav(p.id)) flags.push('<span class="flag" style="color:#b8892f">☆</span>');
     if (Z.note(p.id)) flags.push('<span class="flag" style="color:#2f5d56">✎</span>');
@@ -121,6 +121,8 @@
     }
     h.push('<div class="searchbox mb10"><svg class="s-ico" viewBox="0 0 24 24"><circle cx="11" cy="11" r="6.5" fill="none" stroke-width="1.9"/><path d="m16 16 4.5 4.5" stroke-width="1.9" stroke-linecap="round" fill="none"/></svg>' +
       '<input class="input" id="cat-kw" placeholder="查腧穴：穴名 / 编号 / 拼音" value="' + esc(st.kw) + '" autocomplete="off"></div>');
+    var starN = Z.points.filter(function (p) { return p.star; }).length;
+    h.push('<div class="legend">穴名后带 ★ 者为教材标注的<b>临床常用穴</b>（共 ' + starN + ' 个）</div>');
     h.push('<div id="cat-list">' + pointsListHTML() + '</div>');
     main.innerHTML = h.join('');
     main.className = st.manage ? 'has-bar' : '';
@@ -166,7 +168,7 @@
     h.push('<div class="meta-row">' + (v.code ? '<span class="chip solid">' + esc(v.code) + '</span>' : '') +
       (v.special ? '<span class="chip">' + esc(v.special) + '</span>' : '') +
       '<span class="chip gray">' + esc(v.meridianName) + '</span>' +
-      (v.star ? '<span class="chip star-chip">★ 重点穴</span>' : '') + '</div>');
+      (v.star ? '<span class="chip star-chip">★ 临床常用穴</span>' : '') + '</div>');
     h.push('<div class="ct-body">' + sec('定位', v.location) + sec('解剖', v.anatomy) +
       sec('主治', v.indications) + sec('操作', v.manipulation) + '</div>');
     h.push('<div class="ct-acts">' +

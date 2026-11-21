@@ -36,10 +36,12 @@
         '<span class="e-t">' + e.t + '</span><span class="e-s">' + e.s + '</span></a>';
     }).join('') + '</div>');
 
+    var starN = Z.points.filter(function (p) { return p.star; }).length;
     h.push('<div class="card flat"><p class="small muted" style="margin:0">' +
       '内容基于《针灸学》（第六版）教材整理稿：经络腧穴各论 15 节 ' + (st.points || 0) +
       ' 个腧穴，针灸治疗各论 6 节 ' + (st.diseases || 0) + ' 个病证（含附病证 ' + (st.attach || 0) +
-      '），共 ' + (st.units || 0) + ' 个治疗单元、' + (st.pairs || 0) + ' 条「X配…」配穴。仅供学习，不提供临床指导。</p></div>');
+      '），共 ' + (st.units || 0) + ' 个治疗单元、' + (st.pairs || 0) + ' 条「X配…」配穴。' +
+      '<br>穴名后带 <b>★</b> 者为教材标注的<b>临床常用穴</b>（共 ' + starN + ' 个）。仅供学习，不提供临床指导。</p></div>');
     main.innerHTML = h.join('');
   }
 
@@ -298,6 +300,8 @@
     main.innerHTML = '<div class="card">' +
       '<h3 class="serif" style="margin:0 0 8px">针灸学 · 学习卡片</h3>' +
       '<p class="small">本程序内容基于《针灸学》（第六版）教材整理稿（经络腧穴各论 + 针灸治疗各论）。仅供学习使用，不提供临床指导。</p>' +
+      '<p class="small">穴名后带 <b>★</b> 者为教材标注的<b>临床常用穴</b>（共 ' +
+      Z.points.filter(function (p) { return p.star; }).length + ' 个）。</p>' +
       '<p class="small muted">数据范围：经络腧穴各论 15 节 ' + (st.points || 0) + ' 穴；针灸治疗各论 6 节 ' +
       (st.diseases || 0) + ' 证（含附 ' + (st.attach || 0) + '），' + (st.units || 0) + ' 个治疗单元、' +
       (st.pairs || 0) + ' 条配穴关系。</p>' +

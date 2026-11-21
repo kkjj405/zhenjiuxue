@@ -572,3 +572,7 @@ textarea.input{resize:vertical; min-height:88px}
 .pc-all input{width:17px;height:17px;accent-color:var(--brown)}
 .pc-bd{display:none;padding:2px 0 6px}
 .pick-chap.open .pc-bd{display:block}
+/* 目录说明（★ 临床常用穴） */
+.legend{margin:0 4px 10px;padding:8px 10px;border-radius:10px;background:var(--card-2);
+  border:1px solid var(--line);color:var(--ink-2);font-size:12px;line-height:1.6}
+.legend b{color:var(--brown-d)}
