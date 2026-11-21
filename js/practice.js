@@ -354,7 +354,12 @@
       };
     });
     main.querySelector('#start-btn').onclick = function () {
-      var items = buildItems();
+      var items;
+      try { items = buildItems(); }
+      catch (e) {
+        UI.dialog({ title: '无法开始练习', text: '生成题目时出错：' + (e && e.message ? e.message : e) + '。请减少范围后重试。' });
+        return;
+      }
       if (!items.length) { UI.toast('所选范围没有可练习内容'); return; }
       run = {
         mode: mode, scope: scope, fields: st.fields.slice(), items: items, idx: 0,

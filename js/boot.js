@@ -4,6 +4,17 @@
   var Z = window.ZJ, UI = window.ZJ_UI;
   if (!Z || !UI) return;
   var VER = window.ZJ_VERSION || { web: '1.0.0' };
+  /* 老 WebView 兜底：Element.closest */
+  if (!Element.prototype.closest) {
+    Element.prototype.closest = function (sel) {
+      var el = this;
+      while (el && el.nodeType === 1) {
+        if (el.matches ? el.matches(sel) : false) return el;
+        el = el.parentElement;
+      }
+      return null;
+    };
+  }
   try {
     if (!Z.store.meta.firstOpen) Z.store.meta.firstOpen = Date.now();
     if (Z.store.meta.lastVersion && Z.store.meta.lastVersion !== VER.web) {
