@@ -5,7 +5,7 @@
   var esc = Z.esc, icon = UI.icon;
 
   var LETTERS = 'ABCDEFGHIJKLMN', MAX_OPT = 12, MAX_DRAFTS = 5;
-  var st = { scope: 'point', fields: [], sel: {}, order: 'random' };
+  var st = { scope: 'point', fields: [], sel: {}, order: 'random', open: {} };
   var run = null;
 
   function letter(i) { return LETTERS.charAt(i) || '?'; }
@@ -209,6 +209,57 @@
     });
   }
 
+  /* ---------- 范围选择：按目录折叠 / 整节批量 ---------- */
+  function pickGroups(scope) {
+    var gs = [];
+    if (scope === 'point') {
+      Z.meridians.forEach(function (m) {
+        var ids = (m.pointIds || []).filter(function (pid) { return Z.byId[pid]; });
+        if (ids.length) gs.push({ key: m.id, name: m.no + '　' + m.name, ids: ids, kind: 'point' });
+      });
+    } else {
+      Z.sections.forEach(function (sec) {
+        var ids = (sec.diseaseIds || []).filter(function (did) { return Z.byId[did]; });
+        if (ids.length) gs.push({ key: sec.id, name: sec.no + '　' + sec.name, ids: ids, kind: 'disease' });
+      });
+    }
+    return gs;
+  }
+  function pickGroupsHTML(scope) {
+    var out = [];
+    pickGroups(scope).forEach(function (g) {
+      var opened = !!st.open[g.key];
+      var sel = g.ids.filter(function (id) { return st.sel[id]; }).length;
+      out.push('<div class="pick-chap' + (opened ? ' open' : '') + '" data-gk="' + g.key + '">' +
+        '<div class="pc-hd"><span class="pc-caret">▸</span>' +
+        '<span class="pc-name">' + esc(g.name) + '</span>' +
+        '<span class="pc-cnt"><b>' + sel + '</b>/' + g.ids.length + '</span>' +
+        '<label class="pc-all" title="整节全选/取消"><input type="checkbox" data-gall="' + g.key + '"' +
+        (sel && sel === g.ids.length ? ' checked' : '') + '></label></div>' +
+        '<div class="pc-bd">' +
+        g.ids.map(function (id) {
+          var x = Z.byId[id];
+          var nm = g.kind === 'point' ? Z.viewPoint(x).name : ((x.kind === 'attach' ? '附：' : '') + x.name);
+          var sub = g.kind === 'point' ? (Z.viewPoint(x).code || '') : (x.kind === 'attach' ? '附' : '');
+          return '<label class="pick"><input type="checkbox" data-sel="' + id + '"' + (st.sel[id] ? ' checked' : '') + '>' +
+            '<span class="pk-nm">' + esc(nm) + '</span>' +
+            (sub ? '<span class="tiny dim">' + esc(sub) + '</span>' : '') + '</label>';
+        }).join('') + '</div></div>');
+    });
+    return out.join('');
+  }
+  function syncGroup(gk, scope) {
+    var g = pickGroups(scope).filter(function (x) { return x.key === gk; })[0];
+    if (!g) return;
+    var sel = g.ids.filter(function (id) { return st.sel[id]; }).length;
+    var box = document.querySelector('.pick-chap[data-gk="' + gk + '"]');
+    if (!box) return;
+    var cnt = box.querySelector('.pc-cnt');
+    if (cnt) cnt.innerHTML = '<b>' + sel + '</b>/' + g.ids.length;
+    var all = box.querySelector('[data-gall]');
+    if (all) { all.checked = sel === g.ids.length; all.indeterminate = sel > 0 && sel < g.ids.length; }
+  }
+
   /* ---------- 设置页 ---------- */
   function renderSetup(main, p, q) {
     var mode = (q && q.m === 'tc') ? 'tc' : 'mo';
@@ -220,30 +271,9 @@
     var h = [];
     h.push('<div class="card"><div class="row between mb8"><b>范围</b><span class="tiny dim">已选 <b id="sc-n">0</b> 项</span></div>');
     h.push('<div class="row wrap" style="gap:6px;margin-bottom:8px">' +
-      '<button class="btn xs" id="sel-all">全选</button><button class="btn xs" id="sel-none">清空</button></div>');
-    h.push('<div class="pick-list">');
-    if (scope === 'point') {
-      Z.meridians.forEach(function (m) {
-        h.push('<div class="pick-grp">' + esc(m.no) + '　' + esc(m.name) + '</div>');
-        (m.pointIds || []).forEach(function (pid) {
-          var pt = Z.byId[pid];
-          if (!pt) return;
-          h.push('<label class="pick"><input type="checkbox" data-sel="' + pid + '"><span class="pk-nm">' +
-            esc(pt.name) + '</span><span class="tiny dim">' + esc(pt.code || '') + '</span></label>');
-        });
-      });
-    } else {
-      Z.sections.forEach(function (sec) {
-        h.push('<div class="pick-grp">' + esc(sec.no) + '　' + esc(sec.name) + '</div>');
-        (sec.diseaseIds || []).forEach(function (did) {
-          var d = Z.byId[did];
-          if (!d) return;
-          h.push('<label class="pick"><input type="checkbox" data-sel="' + did + '"><span class="pk-nm">' +
-            (d.kind === 'attach' ? '附：' : '') + esc(d.name) + '</span></label>');
-        });
-      });
-    }
-    h.push('</div></div>');
+      '<button class="btn xs" id="sel-all">全选全部</button><button class="btn xs" id="sel-none">清空</button>' +
+      '<span class="tiny dim" style="align-self:center">点节名展开/折叠，节右侧方框可整节目录批量勾选</span></div>');
+    h.push('<div class="pick-list">' + pickGroupsHTML(scope) + '</div></div>');
     h.push('<div class="card"><b>内容</b><div class="row wrap" style="gap:6px;margin-top:8px">' +
       (scope === 'point'
         ? ['location', 'anatomy', 'indications', 'manipulation'].map(function (f) {
@@ -265,22 +295,49 @@
       var b = main.querySelector('#start-btn'); if (b) b.disabled = !okS;
       var n = main.querySelector('#sc-n'); if (n) n.textContent = Object.keys(st.sel).length;
     }
+    function refreshSelUI() {
+      var scope2 = scope;
+      pickGroups(scope2).forEach(function (g) { syncGroup(g.key, scope2); });
+    }
+    main.querySelectorAll('.pc-hd').forEach(function (hd) {
+      hd.onclick = function (e) {
+        if (e.target.closest && e.target.closest('.pc-all')) return;
+        var box = hd.closest('.pick-chap');
+        var gk = box.getAttribute('data-gk');
+        st.open[gk] = !st.open[gk];
+        box.classList.toggle('open', !!st.open[gk]);
+      };
+    });
+    main.querySelectorAll('[data-gall]').forEach(function (all) {
+      all.onchange = function () {
+        var gk = all.getAttribute('data-gall');
+        var g = pickGroups(scope).filter(function (x) { return x.key === gk; })[0];
+        if (!g) return;
+        g.ids.forEach(function (id) { if (all.checked) st.sel[id] = 1; else delete st.sel[id]; });
+        main.querySelectorAll('.pick-chap[data-gk="' + gk + '"] [data-sel]').forEach(function (ck) {
+          ck.checked = !!all.checked && !!st.sel[ck.getAttribute('data-sel')];
+        });
+        syncGroup(gk, scope); updateStart();
+      };
+    });
     main.querySelectorAll('[data-sel]').forEach(function (ck) {
       ck.onchange = function () {
         var id = ck.getAttribute('data-sel');
         if (ck.checked) st.sel[id] = 1; else delete st.sel[id];
+        var box = ck.closest('.pick-chap');
+        if (box) syncGroup(box.getAttribute('data-gk'), scope);
         updateStart();
       };
     });
     main.querySelector('#sel-all').onclick = function () {
       (scope === 'point' ? Z.points : Z.diseases).forEach(function (x) { st.sel[x.id] = 1; });
       main.querySelectorAll('[data-sel]').forEach(function (ck) { ck.checked = true; });
-      updateStart();
+      refreshSelUI(); updateStart();
     };
     main.querySelector('#sel-none').onclick = function () {
       st.sel = {};
       main.querySelectorAll('[data-sel]').forEach(function (ck) { ck.checked = false; });
-      updateStart();
+      refreshSelUI(); updateStart();
     };
     main.querySelectorAll('[data-fld]').forEach(function (b) {
       b.onclick = function () {
