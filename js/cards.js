@@ -152,7 +152,9 @@
   /* ================= 腧穴卡片 ================= */
   function sec(title, body) {
     if (!body) return '';
-    return '<section class="sec"><h2 class="sec-h">' + esc(title) + '</h2><div class="rich">' + Z.renderRich(body) + '</div></section>';
+    var inner = Z.renderRich(body);
+    if (!inner || !inner.trim()) return '';   /* 空数组也视为无内容，便于上层显示「教材中未提及」 */
+    return '<section class="sec"><h2 class="sec-h">' + esc(title) + '</h2><div class="rich">' + inner + '</div></section>';
   }
   function renderPoint(main, p) {
     var id = p[0], raw = Z.byId[id];
@@ -288,21 +290,23 @@
     return h.join('');
   }
 
+  var MISS = '<div class="empty miss"><span class="em-ico">—</span>教材中未提及</div>';
   function diseasePageHTML(v, page) {
     var h = [];
-    if (page === 0) h.push(sec('病证概述', v.overview));
-    else if (page === 1) h.push(sec('辨证', v.bianzheng));
+    if (page === 0) h.push(sec('病证概述', v.overview) || MISS);
+    else if (page === 1) h.push(sec('辨证', v.bianzheng) || MISS);
     else if (page === 2) {
-      if (!v.units.length) h.push('<div class="empty">本证无独立针灸治疗内容（见其附病证）</div>');
+      if (!v.units.length) h.push('<div class="empty miss"><span class="em-ico">—</span>教材中未提及独立的针灸治疗内容' +
+        (v.attachIds && v.attachIds.length ? '（见其附病证）' : '') + '</div>');
       else {
         h.push('<section class="sec"><h2 class="sec-h">基本治疗</h2><div class="rich">' +
           v.units.map(function (u, i) { return unitHTML(u, i); }).join('') + '</div></section>');
       }
     } else {
-      h.push(sec('其他治疗', v.other));
-      h.push(sec('按语', v.anliao));
+      h.push(sec('其他治疗', v.other) || MISS);
+      h.push(sec('按语', v.anliao) || MISS);
     }
-    return h.join('') || '<div class="empty">本页暂无内容</div>';
+    return h.join('');
   }
 
   function renderDisease(main, p, q) {
