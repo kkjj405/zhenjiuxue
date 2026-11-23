@@ -5,6 +5,7 @@
   var esc = Z.esc, icon = UI.icon;
 
   var st = { manage: false, sel: {}, kw: '' };
+  var CARET = '<svg class="caret" viewBox="0 0 24 24"><path d="M9 6l6 6-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>';
 
   function removeManageBar() { var b = document.getElementById('fbar'); if (b) b.remove(); }
   function toggleSel(id) { if (st.sel[id]) delete st.sel[id]; else st.sel[id] = 1; }
@@ -72,7 +73,8 @@
         hitCount++;
       });
       if (rows.length) {
-        out.push('<div class="chap open" data-chap="' + mi + '"><div class="chap-hd"><span class="cn">' +
+        out.push('<div class="chap' + (kw ? ' open' : '') + '" data-chap="' + mi + '"><div class="chap-hd">' + CARET +
+          '<span class="cn">' +
           esc(m.no) + '　' + esc(m.name) + '</span><span class="chip gray tiny">' + rows.filter(function (r) { return r.indexOf('data-dr') >= 0; }).length + ' 穴</span></div>' +
           '<div class="chap-bd">' + rows.join('') + '</div></div>');
       }
@@ -84,6 +86,13 @@
   }
 
   function bindList(main, scope) {
+    // 目录折叠：默认只显示大标题，点标题展开/收起细分条目
+    main.querySelectorAll('.chap-hd').forEach(function (hd) {
+      hd.onclick = function () {
+        var box = hd.closest('.chap');
+        if (box) box.classList.toggle('open');
+      };
+    });
     main.querySelectorAll('[data-dr]').forEach(function (el) {
       el.onclick = function (e) {
         var id = el.getAttribute('data-dr');
@@ -210,7 +219,8 @@
         if (kw && d.name.indexOf(kw) < 0 && (d.sectionName || '').indexOf(kw) < 0) return;
         rows.push(diseaseRow(d, st.manage)); hit++;
       });
-      if (rows.length) out.push('<div class="chap open"><div class="chap-hd"><span class="cn">' + esc(sec.no) + '　' + esc(sec.name) +
+      if (rows.length) out.push('<div class="chap' + (kw ? ' open' : '') + '"><div class="chap-hd">' + CARET +
+        '<span class="cn">' + esc(sec.no) + '　' + esc(sec.name) +
         '</span><span class="chip gray tiny">' + rows.length + ' 证</span></div><div class="chap-bd">' + rows.join('') + '</div></div>');
     });
     if (!hit) return UI.emptyBox('没有找到「' + kw + '」', '试试病证名（如 头痛）');

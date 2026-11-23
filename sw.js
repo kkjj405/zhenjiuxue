@@ -1,8 +1,8 @@
 /* 针灸学 · Service Worker（离线优先，全量预缓存）
- * 版本缓存：1.0.9
+ * 版本缓存：1.0.10
  * 资源清单由 build_pwa.py 自动生成，共 16 项。
  */
-const CACHE = 'zjx-zhenjiuxue-v1.0.9';
+const CACHE = 'zjx-zhenjiuxue-v1.0.10';
 const ASSETS = [
   "./app.css",
   "./index.html",
